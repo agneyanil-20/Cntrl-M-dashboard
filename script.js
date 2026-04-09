@@ -198,14 +198,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ══════════════════════════════════════════
   // CHECK SESSION FROM login.html
   // ══════════════════════════════════════════
-  if (sessionUserId && sessionUserRole) {
-    console.log("Found session:", sessionUserId, sessionUserRole);
-    navigateToState(APP_STATES.DASHBOARD, { userId: sessionUserId, role: sessionUserRole });
+  // Always check fresh session state on load
+  const activeUserId = sessionStorage.getItem('cm_user_id');
+  const activeUserRole = sessionStorage.getItem('cm_user_role');
+
+  if (activeUserId && activeUserRole) {
+    console.log("Authenticating from session:", activeUserId, activeUserRole);
+    // Directly go to dashboard, bypassing overlays
+    navigateToState(APP_STATES.DASHBOARD, { userId: activeUserId, role: activeUserRole });
     _bindAdminAuthForm();
     return;
   }
 
-  // No session: start at role selection
+  // No session found: start at role selection
+  console.log("No active session. Starting at role selection.");
   navigateToState(APP_STATES.ROLE_SELECTION);
   _bindAdminAuthForm();
 
@@ -361,8 +367,13 @@ window.openAdminAuth = function() {
 };
 
 function finalizeLogin(userId, role = 'admin') {
+  console.log("Finalizing login for:", userId, role);
   currentUserId = userId;
   currentUserRole = role;
+  
+  // Persist session
+  sessionStorage.setItem('cm_user_id', userId);
+  sessionStorage.setItem('cm_user_role', role);
   
   // Fade out entry screens
   const roleScreen = document.getElementById('roleScreen');
