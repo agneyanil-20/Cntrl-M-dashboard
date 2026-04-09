@@ -14,26 +14,36 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <!-- ═══════════ NEW ENTRY EXPERIENCE ═══════════ -->
   <div id="roleScreen" class="entry-overlay">
+    <div class="blob-container">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+    </div>
     <div class="role-container">
       <h1 class="role-title">Who are you?</h1>
+      <p class="role-subtitle">Select your workspace</p>
+      
       <div class="role-grid">
         <button class="role-card" onclick="selectRoleGroup('designer')">
-          <i class="ph ph-bezier-curve"></i>
-          <span>Designer</span>
+          <span class="role-icon">🎨</span>
+          <span class="role-name">Designer</span>
         </button>
         <button class="role-card" onclick="selectRoleGroup('video')">
-          <i class="ph ph-video-camera"></i>
-          <span>Video Editor</span>
+          <span class="role-icon">🎬</span>
+          <span class="role-name">Video Editor</span>
         </button>
         <button class="role-card" onclick="selectRoleGroup('social')">
-          <i class="ph ph-instagram-logo"></i>
-          <span>Social Media Team</span>
+          <span class="role-icon">📱</span>
+          <span class="role-name">Social Media</span>
+        </button>
+        <button class="role-card" onclick="selectRoleGroup('content')">
+          <span class="role-icon">✍️</span>
+          <span class="role-name">Content Writer</span>
         </button>
       </div>
+      
       <button class="admin-lock-btn" onclick="openAdminAuth()">
-        <i class="ph ph-lock-key"></i>
+        Admin 🔒
       </button>
     </div>
   </div>

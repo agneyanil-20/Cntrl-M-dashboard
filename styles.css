@@ -1,18 +1,21 @@
 :root {
   --primary: #E6FF00;
   --bg-pure: #000000;
-  --bg-card: #121821;
-  --bg-sidebar: #0a0e14;
+  --bg-card: rgba(18, 24, 33, 0.7);
+  --bg-sidebar: rgba(10, 14, 20, 0.8);
   --text-main: #ffffff;
   --text-muted: #8a8f98;
-  --border-subtle: rgba(230, 255, 0, 0.1);
-  --border-bright: rgba(230, 255, 0, 0.3);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(230, 255, 0, 0.4);
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.1);
   --urgent: #ff4757;
   --near: #ffa502;
   --safe: #2ed573;
-  --radius: 12px;
-  --glow: 0 0 15px rgba(230, 255, 0, 0.2);
-  --transition: all 0.3s ease;
+  --radius: 16px;
+  --glow: 0 0 20px rgba(230, 255, 0, 0.2);
+  --transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  --blur: blur(12px);
 }
 
 body.light-mode {
@@ -50,6 +53,7 @@ body {
 .sidebar {
   width: 260px;
   background-color: var(--bg-sidebar);
+  backdrop-filter: var(--blur);
   border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
@@ -158,8 +162,8 @@ body {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
   position: sticky;
   top: 0;
   z-index: 90;
@@ -338,11 +342,12 @@ body {
 }
 
 .deadline-card {
-  min-width: 240px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  min-width: 260px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 20px;
   position: relative;
   overflow: hidden;
   transition: var(--transition);
@@ -350,6 +355,8 @@ body {
 
 .deadline-card:hover {
   border-color: var(--border-bright);
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .deadline-status-bar {
@@ -410,16 +417,35 @@ body {
 }
 
 .overview-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   padding: 24px;
   transition: var(--transition);
+  position: relative;
+  overflow: hidden;
 }
 
 .overview-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-8px);
   border-color: var(--border-bright);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.overview-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, transparent, rgba(230, 255, 0, 0.03), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.8s;
+}
+
+.overview-card:hover::after {
+  transform: translateX(100%);
 }
 
 .overview-card-top {
@@ -506,15 +532,19 @@ body {
 }
 
 .client-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 24px;
   transition: var(--transition);
 }
 
 .client-card:hover {
   border-color: var(--border-bright);
+  background: rgba(255, 255, 255, 0.05);
+  transform: scale(1.01);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .client-card-header {
@@ -574,17 +604,33 @@ body {
 }
 
 .progress-track {
-  height: 6px;
+  height: 8px;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
+  border-radius: 4px;
   margin-bottom: 20px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--primary);
-  box-shadow: var(--glow);
+  background: linear-gradient(90deg, var(--primary), #fff);
+  box-shadow: 0 0 15px var(--primary);
+  border-radius: 4px;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: liquidFlow 2s infinite linear;
+}
+
+@keyframes liquidFlow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .deliverables {
@@ -619,10 +665,12 @@ body {
 
 /* ═══════════ D. TEAM WORKLOAD ═══════════ */
 .team-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .team-list {
@@ -804,19 +852,22 @@ body {
 }
 
 .modal-content {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius);
+  background: rgba(18, 24, 33, 0.8);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
   width: 100%;
-  max-width: 500px;
-  padding: 32px;
-  transform: translateY(20px);
-  transition: var(--transition);
+  max-width: 450px;
+  padding: 40px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  transform: translateY(20px) scale(0.95);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .modal-overlay.active .modal-content {
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
+
 
 .modal-header {
   display: flex;
@@ -984,58 +1035,145 @@ body {
   50% { text-shadow: 0 0 30px rgba(230, 255, 0, 0.8), 0 0 60px rgba(230, 255, 0, 0.4); }
 }
 
+/* ═══════════ ENTRY EXPERIENCE Redesign ═══════════ */
+.entry-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+.blob-container {
+  position: absolute;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.blob {
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(230, 255, 0, 0.08) 0%, transparent 70%);
+  filter: blur(80px);
+  border-radius: 50%;
+  animation: blobFloat 20s infinite alternate;
+}
+.blob-1 { top: -10%; left: -10%; background: radial-gradient(circle, rgba(230, 255, 0, 0.1) 0%, transparent 70%); }
+.blob-2 { bottom: -10%; right: -10%; background: radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, transparent 70%); animation-delay: -5s; }
+
+@keyframes blobFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(100px, 50px) scale(1.1); }
+}
+
 .role-container {
+  position: relative;
+  z-index: 10;
   text-align: center;
   width: 100%;
-  max-width: 800px;
+  max-width: 700px;
   padding: 40px;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
+
 .role-title {
-  font-size: 28px;
-  margin-bottom: 40px;
-  font-weight: 600;
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -2px;
+  margin-bottom: 8px;
+  background: linear-gradient(to bottom, #fff, #888);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
+
+.role-subtitle {
+  color: #666;
+  font-size: 18px;
+  margin-bottom: 50px;
+}
+
 .role-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
 }
+
 .role-card {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.05);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-  padding: 48px 24px;
-  border-radius: 16px;
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 45px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
   cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 16px;
-  transition: all 0.3s ease;
-  color: var(--text-main);
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
 }
-.role-card i { font-size: 40px; color: var(--primary); }
+
+.role-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(230, 255, 0, 0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
 .role-card:hover {
-  background: rgba(255,255,255,0.05);
-  border-color: var(--primary);
-  transform: translateY(-5px);
-  box-shadow: 0 12px 40px rgba(230, 255, 0, 0.15);
+  transform: translateY(-10px) scale(1.02);
+  border-color: rgba(230, 255, 0, 0.3);
+  box-shadow: 
+    0 20px 40px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(230, 255, 0, 0.1);
+}
+
+.role-card:hover::before {
+  opacity: 1;
+}
+
+.role-icon {
+  font-size: 36px;
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.role-card:hover .role-icon {
+  transform: scale(1.2) rotate(5deg);
+}
+
+.role-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.5px;
 }
 
 .admin-lock-btn {
-  position: fixed;
-  bottom: 30px; right: 30px;
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: var(--text-muted);
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
+  color: #444;
+  font-size: 14px;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.3s ease;
+  transition: color 0.3s;
 }
+
 .admin-lock-btn:hover {
-  background: rgba(230, 255, 0, 0.1);
   color: var(--primary);
-  border-color: var(--primary);
 }
 
 /* ═══════════ GLOBAL PADDING & MINIMALIST ADJUSTMENTS ═══════════ */
