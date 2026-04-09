@@ -71,6 +71,10 @@ let mockTasks = [
 let currentUserId = null;
 let currentUserRole = 'admin'; 
 
+// ── Session variables (from localStorage/sessionStorage) ──
+let sessionUserId = sessionStorage.getItem('cm_user_id');
+let sessionUserRole = sessionStorage.getItem('cm_user_role');
+
 // ── Screen States ──
 const APP_STATES = {
   ROLE_SELECTION: 'roleSelection',
@@ -175,13 +179,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // ── Explicitly Bind Role Cards ──
+  // This bypasses any issues with inline onclick handlers
+  document.querySelectorAll('#roleScreen .role-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+      const roleName = this.querySelector('.role-name')?.textContent;
+      let roleKey = '';
+      if (roleName === 'Designer') roleKey = 'designer';
+      else if (roleName === 'Video Editor') roleKey = 'video';
+      else if (roleName === 'Social Media') roleKey = 'social';
+      else if (roleName === 'Content Writer') roleKey = 'content';
+      
+      console.log("Card clicked manually:", roleName, roleKey);
+      if (roleKey) selectRoleGroup(roleKey);
+    });
+  });
+
   // ══════════════════════════════════════════
   // CHECK SESSION FROM login.html
   // ══════════════════════════════════════════
-  const sessionUserId   = sessionStorage.getItem('cm_user_id');
-  const sessionUserRole = sessionStorage.getItem('cm_user_role');
-
   if (sessionUserId && sessionUserRole) {
+    console.log("Found session:", sessionUserId, sessionUserRole);
     navigateToState(APP_STATES.DASHBOARD, { userId: sessionUserId, role: sessionUserRole });
     _bindAdminAuthForm();
     return;
@@ -209,41 +227,41 @@ window.navigateToState = function(state, data = {}) {
   const passModal = document.getElementById('adminAuthModal');
   const dashboard = document.getElementById('mainAppLayout');
 
-  // Helper to hide all with fade
-  const hideAll = () => {
+  // Helper to reset screens to baseline
+  const resetScreens = () => {
     [roleScreen, nameScreen].forEach(s => {
-      if (s) {
-        s.style.opacity = '0';
-        setTimeout(() => s.style.display = 'none', 300);
-      }
+      if (s) s.style.display = 'none';
+      if (s) s.style.opacity = '0';
     });
     if (passModal) passModal.classList.remove('active');
   };
 
   switch(state) {
     case APP_STATES.ROLE_SELECTION:
-      hideAll();
-      setTimeout(() => {
-        roleScreen.style.display = 'flex';
-        setTimeout(() => roleScreen.style.opacity = '1', 50);
-      }, 350);
+      resetScreens();
+      roleScreen.style.display = 'flex';
+      setTimeout(() => roleScreen.style.opacity = '1', 10);
       break;
 
     case APP_STATES.NAME_SELECTION:
       // data.role expected
+      console.log("Populating names for:", data.role);
       _populateNameGrid(data.role);
       roleScreen.style.opacity = '0';
       setTimeout(() => {
         roleScreen.style.display = 'none';
         nameScreen.style.display = 'flex';
-        setTimeout(() => nameScreen.style.opacity = '1', 50);
+        setTimeout(() => nameScreen.style.opacity = '1', 10);
       }, 300);
       break;
 
     case APP_STATES.PASSWORD_SCREEN:
       // data.userId expected
-      const user = state.profiles.find(p => p.id === data.userId);
-      if (!user && data.userId !== 'admin') return;
+      const user = mockProfiles.find(p => p.id === data.userId);
+      if (!user && data.userId !== 'admin') {
+        console.error("User not found for ID:", data.userId);
+        return;
+      }
       
       const userName = data.userId === 'admin' ? 'Admin' : user.name;
       passModal.querySelector('h2').textContent = `Logging in as ${userName}`;
@@ -255,7 +273,7 @@ window.navigateToState = function(state, data = {}) {
       break;
 
     case APP_STATES.DASHBOARD:
-      hideAll();
+      resetScreens();
       finalizeLogin(data.userId || sessionUserId, data.role || sessionUserRole);
       break;
   }
@@ -267,14 +285,22 @@ function _populateNameGrid(role) {
   grid.innerHTML = '';
   const users = mockProfiles.filter(p => p.role === role);
   
+  if (users.length === 0) {
+    console.warn("No users found for role:", role);
+    grid.innerHTML = '<p style="color:var(--text-muted); text-align:center; width:100%;">No profiles found for this role.</p>';
+  }
+
   users.forEach(u => {
     const icon = u.avatar && u.avatar.includes('F') ? 'ph-user-female' : 'ph-user';
-    grid.insertAdjacentHTML('beforeend', `
-       <button class="role-card" onclick="navigateToState('passwordScreen', { userId: '${u.id}' })">
-          <i class="ph ${icon}" style="font-size:28px;"></i>
-          <span class="role-name">${u.name}</span>
-       </button>
-    `);
+    const btn = document.createElement('button');
+    btn.className = 'role-card anim-enter';
+    btn.style.padding = '30px 20px';
+    btn.innerHTML = `
+        <i class="ph ${icon}" style="font-size:28px;"></i>
+        <span class="role-name">${u.name}</span>
+    `;
+    btn.onclick = () => navigateToState(APP_STATES.PASSWORD_SCREEN, { userId: u.id });
+    grid.appendChild(btn);
   });
 }
 
