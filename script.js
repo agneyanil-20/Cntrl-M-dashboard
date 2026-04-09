@@ -13,22 +13,22 @@ if (SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE' && window.supabase) {
 // MOCK STATE DATA TEMPLATES (Fallback)
 // ══════════════════════════════════════════
 const mockProfiles = [
-  { id: 'usr_admin', name: 'Admin', role: 'admin', auth: 'avocado123' },
+  { id: 'usr_admin', name: 'Admin', role: 'admin', auth: 'avocado123', avatar: 'AD' },
   // Designers
-  { id: 'usr_neha', name: 'Neha', role: 'designer', avatar: 'NF', auth: 'neha123' },
-  { id: 'usr_agney', name: 'Agney', role: 'designer', avatar: 'AM', auth: 'agney123' },
-  { id: 'usr_nived', name: 'Nived', role: 'designer', avatar: 'NM', auth: 'nived123' },
+  { id: 'usr_neha', name: 'Neha', role: 'designer', avatar: 'NH', auth: 'neha123' },
+  { id: 'usr_agney', name: 'Agney', role: 'designer', avatar: 'AG', auth: 'agney123' },
+  { id: 'usr_nived', name: 'Nived', role: 'designer', avatar: 'NV', auth: 'nived123' },
   // Video Editors
-  { id: 'usr_sijin', name: 'Sijin', role: 'video', avatar: 'SM', auth: 'sijin123' },
-  { id: 'usr_shawn', name: 'Shawn', role: 'video', avatar: 'SM', auth: 'shawn123' },
-  { id: 'usr_adil', name: 'Adil', role: 'video', avatar: 'AM', auth: 'adil123' },
-  { id: 'usr_hari', name: 'Hari', role: 'video', avatar: 'HM', auth: 'hari123' },
-  { id: 'usr_abhay', name: 'Abhay', role: 'video', avatar: 'AM', auth: 'abhay123' },
+  { id: 'usr_sijin', name: 'Sijin', role: 'video', avatar: 'SJ', auth: 'sijin123' },
+  { id: 'usr_shawn', name: 'Shawn', role: 'video', avatar: 'SH', auth: 'shawn123' },
+  { id: 'usr_adil', name: 'Adil', role: 'video', avatar: 'AD', auth: 'adil123' },
+  { id: 'usr_hari', name: 'Hari', role: 'video', avatar: 'HR', auth: 'hari123' },
+  { id: 'usr_abhay', name: 'Abhay', role: 'video', avatar: 'AB', auth: 'abhay123' },
   // Social Media
-  { id: 'usr_megha', name: 'Megha', role: 'social', avatar: 'MF', auth: 'megha123' },
-  { id: 'usr_christi', name: 'Christi', role: 'social', avatar: 'CM', auth: 'christi123' },
+  { id: 'usr_megha', name: 'Megha', role: 'social', avatar: 'MG', auth: 'megha123' },
+  { id: 'usr_christi', name: 'Christi', role: 'social', avatar: 'CH', auth: 'christi123' },
   // Content Writer
-  { id: 'usr_dilna', name: 'Dilna', role: 'content', avatar: 'DF', auth: 'mango123' }
+  { id: 'usr_dilna', name: 'Dilna', role: 'content', avatar: 'DL', auth: 'mango123' }
 ];
 
 const mockClients = [
