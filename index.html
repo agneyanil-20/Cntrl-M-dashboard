@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/phosphor-icons/1.4.2/css/phosphor.min.css" />
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=4" />
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -49,8 +49,15 @@
   </div>
 
   <div id="nameScreen" class="entry-overlay" style="display: none;">
+    <div class="blob-container">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+    </div>
     <div class="role-container">
-      <button class="back-btn" onclick="backToRoles()"><i class="ph ph-arrow-left"></i> Back</button>
+      <button class="back-btn" onclick="backToRoles()">
+        <i class="ph ph-caret-left"></i> 
+        Back
+      </button>
       <h1 class="role-title">Select your profile</h1>
       <div class="role-grid" id="nameGrid">
         <!-- Injected via JS based on role -->
@@ -59,7 +66,8 @@
   </div>
 
   <div class="modal-overlay" id="adminAuthModal">
-    <div class="modal-content" style="max-width: 350px; text-align: center;">
+    <div class="modal-content" style="max-width: 350px; text-align: center; position: relative;">
+      <button class="modal-close" onclick="document.getElementById('adminAuthModal').classList.remove('active')" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);"><i class="ph ph-x"></i></button>
       <h2 style="margin-bottom: 24px;">Admin Access</h2>
       <form id="adminAuthForm">
         <input type="password" id="adminPassword" placeholder="Enter Password" style="width: 100%; margin-bottom: 16px;" required/>
@@ -321,6 +329,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>

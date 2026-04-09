@@ -1010,31 +1010,6 @@ body {
 .status-pending { background: rgba(255,165,2,0.1); color: var(--near); }
 .status-inprogress { background: rgba(69, 170, 242, 0.1); color: #45aaf2; }
 .status-completed { background: rgba(46, 213, 115, 0.1); color: var(--safe); }
-/* ═══════════ ENTRY EXPERIENCE ═══════════ */
-.entry-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  z-index: 9999;
-  background: var(--bg-pure);
-  display: flex;
-  align-items: center; justify-content: center;
-  transition: opacity 0.5s ease;
-}
-
-.splash-logo {
-  font-size: 48px;
-  font-weight: 700;
-  color: var(--text-main);
-  animation: pulseGlow 2s infinite ease-in-out;
-}
-.splash-logo .logo-bracket { color: var(--primary); text-shadow: var(--glow); }
-
-@keyframes pulseGlow {
-  0%, 100% { text-shadow: 0 0 10px rgba(230, 255, 0, 0.2); }
-  50% { text-shadow: 0 0 30px rgba(230, 255, 0, 0.8), 0 0 60px rgba(230, 255, 0, 0.4); }
-}
-
 /* ═══════════ ENTRY EXPERIENCE Redesign ═══════════ */
 .entry-overlay {
   position: fixed;
@@ -1045,6 +1020,7 @@ body {
   display: flex;
   align-items: center; justify-content: center;
   overflow: hidden;
+  transition: opacity 0.5s ease;
 }
 
 .blob-container {
@@ -1071,14 +1047,15 @@ body {
 
 .role-container {
   position: relative;
-  z-index: 10;
+  z-index: 10000;
   text-align: center;
   width: 100%;
-  max-width: 700px;
+  max-width: 800px;
   padding: 40px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  pointer-events: auto;
 }
 
 .role-title {
@@ -1160,20 +1137,57 @@ body {
 }
 
 .admin-lock-btn {
-  position: absolute;
-  bottom: -60px;
-  left: 50%;
-  transform: translateX(-50%);
+  margin-top: 50px;
   background: transparent;
-  border: none;
-  color: #444;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #666;
   font-size: 14px;
   cursor: pointer;
-  transition: color 0.3s;
+  transition: all 0.3s;
+  padding: 8px 16px;
+  border-radius: 100px;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .admin-lock-btn:hover {
   color: var(--primary);
+  border-color: var(--primary);
+  background: rgba(230, 255, 0, 0.05);
+}
+
+.admin-lock-btn:hover {
+  color: var(--primary);
+}
+
+.back-btn {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.back-btn:hover {
+  color: var(--primary);
+}
+
+#nameScreen .role-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  width: 100%;
+}
+
+#nameScreen .role-card {
+  padding: 30px 20px;
 }
 
 /* ═══════════ GLOBAL PADDING & MINIMALIST ADJUSTMENTS ═══════════ */

@@ -4,87 +4,806 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cntrl M — Login</title>
+  <meta name="description" content="Cntrl M internal team login portal." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/phosphor-icons/1.4.2/css/phosphor.min.css" />
-  <link rel="stylesheet" href="styles.css" />
-  <!-- Supabase CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    :root {
+      --primary: #E6FF00;
+      --bg:      #060910;
+      --card:    rgba(255,255,255,0.04);
+      --border:  rgba(255,255,255,0.09);
+      --border-accent: rgba(230,255,0,0.35);
+      --text:    #ffffff;
+      --muted:   #6b7280;
+      --error:   #ff4757;
+      --radius:  18px;
+      --glow:    0 0 24px rgba(230,255,0,0.18);
+      --transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      background: radial-gradient(circle at center, #121821 0%, #000000 100%);
+      overflow: hidden;
+      position: relative;
     }
-    .auth-container {
+
+    /* ── BACKGROUND BLOBS ── */
+    .bg-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.18;
+      pointer-events: none;
+      animation: blobDrift 12s ease-in-out infinite alternate;
+    }
+    .bg-blob-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #E6FF00, transparent 70%);
+      top: -200px; left: -150px;
+      animation-delay: 0s;
+    }
+    .bg-blob-2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #00bcd4, transparent 70%);
+      bottom: -180px; right: -120px;
+      animation-delay: -5s;
+    }
+    @keyframes blobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.08); }
+    }
+
+    /* ── GRID DOTS ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    /* ── SCREENS WRAPPER ── */
+    .login-wrapper {
       width: 100%;
-      max-width: 400px;
-      padding: 40px;
-      background: rgba(18, 24, 33, 0.8);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius);
-      backdrop-filter: blur(10px);
-      text-align: center;
+      max-width: 540px;
+      padding: 24px;
+      position: relative;
+      z-index: 10;
     }
-    .auth-logo {
-      font-size: 32px;
+
+    /* ── LOGO ── */
+    .logo {
+      text-align: center;
+      font-size: 28px;
       font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.1s forwards;
+    }
+    .logo .bracket { color: var(--primary); text-shadow: var(--glow); }
+
+    /* ── SCREEN ── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeUp 0.4s forwards;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(-16px); }
+    }
+
+    .screen-title {
+      font-size: 26px;
+      font-weight: 700;
+      text-align: center;
       margin-bottom: 8px;
     }
-    .auth-logo .logo-bracket { color: var(--primary); text-shadow: var(--glow); }
-    .auth-subtitle {
-      color: var(--text-muted);
-      margin-bottom: 32px;
+    .screen-sub {
+      color: var(--muted);
       font-size: 14px;
+      text-align: center;
+      margin-bottom: 36px;
     }
-    .form-group { text-align: left; margin-bottom: 20px; }
-    .btn-login {
+
+    /* ── ROLE GRID ── */
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
       width: 100%;
+      margin-bottom: 28px;
+    }
+
+    .role-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .role-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(230,255,0,0.06) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .role-card:hover::before { opacity: 1; }
+    .role-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4), var(--glow);
+    }
+    .role-card:active { transform: scale(0.97); }
+
+    .role-icon { font-size: 36px; line-height: 1; }
+    .role-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ── ADMIN BTN ── */
+    .admin-btn {
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 12px 24px;
+      color: var(--muted);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      align-self: flex-end;
+    }
+    .admin-btn:hover { border-color: var(--border-accent); color: var(--primary); }
+
+    /* ── BACK BTN ── */
+    .back-btn {
+      align-self: flex-start;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 28px;
+      padding: 6px 0;
+      transition: var(--transition);
+    }
+    .back-btn:hover { color: var(--text); }
+    .back-arrow { font-size: 18px; line-height: 1; }
+
+    /* ── NAME GRID ── */
+    .name-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 14px;
+      width: 100%;
+      margin-bottom: 28px;
+    }
+
+    .name-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .name-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+    }
+    .name-card:active { transform: scale(0.96); }
+
+    .name-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(230,255,0,0.15), rgba(230,255,0,0.05));
+      border: 1px solid var(--border-accent);
+      display: flex;
+      align-items: center;
       justify-content: center;
-      margin-top: 10px;
-      font-size: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
     }
-    #authError {
-      color: var(--urgent);
+    .name-label {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ── PASSWORD MODAL OVERLAY ── */
+    .pw-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .pw-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .pw-card {
+      background: rgba(12, 16, 24, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      position: relative;
+      transform: scale(0.94) translateY(16px);
+      transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+    }
+    .pw-overlay.open .pw-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .pw-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(255,255,255,0.06);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .pw-close:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+
+    .pw-user-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(230,255,0,0.06);
+      border: 1px solid var(--border-accent);
+      border-radius: 40px;
+      padding: 8px 18px;
+      margin-bottom: 24px;
+    }
+    .pw-user-dot {
+      width: 8px; height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: var(--glow);
+    }
+    .pw-user-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .pw-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .pw-sub {
       font-size: 13px;
-      margin-top: 16px;
-      display: none;
+      color: var(--muted);
+      margin-bottom: 28px;
     }
+
+    /* ── INPUT ── */
+    .pw-input-wrap {
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .pw-input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 50px 14px 18px;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      outline: none;
+      letter-spacing: 2px;
+      transition: var(--transition);
+    }
+    .pw-input:focus {
+      border-color: var(--border-accent);
+      box-shadow: var(--glow);
+    }
+    .pw-toggle {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+      transition: color 0.2s;
+    }
+    .pw-toggle:hover { color: var(--text); }
+
+    /* ── ERROR ── */
+    .pw-error {
+      color: var(--error);
+      font-size: 13px;
+      min-height: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .pw-error.show { opacity: 1; }
+
+    /* ── SUBMIT BTN ── */
+    .pw-submit {
+      width: 100%;
+      background: var(--primary);
+      color: #060910;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .pw-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(230,255,0,0.3);
+    }
+    .pw-submit:active { transform: scale(0.98); }
+
+    /* ── SHAKE ANIMATION ── */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-8px); }
+      40%       { transform: translateX(8px); }
+      60%       { transform: translateX(-5px); }
+      80%       { transform: translateX(5px); }
+    }
+    .shake { animation: shake 0.4s ease; }
+
+    /* ── SUCCESS FLASH ── */
+    .success-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(230,255,0,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .success-overlay.show { opacity: 1; pointer-events: all; }
+    .success-icon {
+      font-size: 64px;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .success-text {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    /* ── CURRENT ROLE LABEL ── */
+    .role-crumb {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+    .role-crumb-icon { font-size: 16px; }
   </style>
 </head>
 <body>
 
-  <div class="auth-container">
-    <div class="auth-logo">
-      <span class="logo-bracket">[</span> Cntrl M <span class="logo-bracket">]</span>
-    </div>
-    <div class="auth-subtitle">Sign in to your dashboard</div>
+  <!-- Background -->
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
 
-    <form id="loginForm">
-      <div class="form-group">
-        <label>Email Address</label>
-        <input type="email" id="email" required placeholder="you@cntrlm.agency" />
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="password" required placeholder="••••••••" />
-      </div>
-      <button type="submit" class="btn-primary btn-login">
-        Sign In <i class="ph ph-arrow-right"></i>
-      </button>
-      <div id="authError">Invalid login credentials.</div>
-      
-      <!-- Placeholder config reminder -->
-      <div style="margin-top:24px; font-size:11px; color:var(--text-muted); padding:10px; border:1px dashed var(--border-bright); border-radius:8px;">
-        <i class="ph ph-warning-circle"></i> Supabase is not configured yet. Set `SUPABASE_URL` and `SUPABASE_KEY` in script.js to enable real authentication. 
-        <br><br><b>Mock Login:</b> Use any email/password to enter.
-      </div>
-    </form>
+  <!-- Success overlay -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-icon">✅</div>
+    <div class="success-text" id="successText">Logging in...</div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- Password Modal -->
+  <div class="pw-overlay" id="pwOverlay">
+    <div class="pw-card" id="pwCard">
+      <button class="pw-close" id="pwClose">✕</button>
+
+      <div class="pw-user-badge">
+        <div class="pw-user-dot"></div>
+        <span class="pw-user-name" id="pwUserName">—</span>
+      </div>
+
+      <div class="pw-title">Enter your password</div>
+      <div class="pw-sub" id="pwSubText">Logging in as <strong id="pwUserLabel">—</strong></div>
+
+      <form id="pwForm" autocomplete="off">
+        <div class="pw-input-wrap">
+          <input
+            class="pw-input"
+            type="password"
+            id="pwInput"
+            placeholder="••••••••"
+            autocomplete="new-password"
+            required
+          />
+          <button type="button" class="pw-toggle" id="pwToggle" tabindex="-1">👁</button>
+        </div>
+        <div class="pw-error" id="pwError">
+          <span>⚠</span> <span id="pwErrorText">Incorrect password. Try again.</span>
+        </div>
+        <button type="submit" class="pw-submit">
+          <span>Sign In</span>
+          <span>→</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Login Wrapper -->
+  <div class="login-wrapper">
+    <div class="logo">
+      <span class="bracket">[</span> Cntrl M <span class="bracket">]</span>
+    </div>
+
+    <!-- ── SCREEN 1: ROLE SELECTION ── -->
+    <div class="screen active" id="screenRole">
+      <div class="screen-title">Who are you?</div>
+      <div class="screen-sub">Select your role to continue</div>
+
+      <div class="role-grid">
+        <button class="role-card" onclick="selectRole('designer', 'Designer', '🎨')" id="btn-designer">
+          <span class="role-icon">🎨</span>
+          <span class="role-label">Designer</span>
+        </button>
+        <button class="role-card" onclick="selectRole('video', 'Video Editor', '🎬')" id="btn-video">
+          <span class="role-icon">🎬</span>
+          <span class="role-label">Video Editor</span>
+        </button>
+        <button class="role-card" onclick="selectRole('social', 'Social Media Team', '📱')" id="btn-social">
+          <span class="role-icon">📱</span>
+          <span class="role-label">Social Media Team</span>
+        </button>
+        <button class="role-card" onclick="selectRole('content', 'Content Writer', '✍️')" id="btn-content">
+          <span class="role-icon">✍️</span>
+          <span class="role-label">Content Writer</span>
+        </button>
+      </div>
+
+      <button class="admin-btn" onclick="openAdminModal()" id="btn-admin">
+        Admin 🔒
+      </button>
+    </div>
+
+    <!-- ── SCREEN 2: NAME SELECTION ── -->
+    <div class="screen" id="screenName">
+      <button class="back-btn" onclick="goBack()" id="backBtn">
+        <span class="back-arrow">←</span>
+        <span>Back</span>
+      </button>
+
+      <div class="role-crumb">
+        <span class="role-crumb-icon" id="roleCrumbIcon"></span>
+        <span id="roleCrumbLabel">Role</span>
+      </div>
+
+      <div class="screen-title">Select your profile</div>
+      <div class="screen-sub">Choose your name to proceed</div>
+
+      <div class="name-grid" id="nameGrid">
+        <!-- injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ══════════════════════════════════════════
+    // USER DATABASE — STRICT PASSWORD MAPPING
+    // ══════════════════════════════════════════
+    const USERS = {
+      designer: [
+        { id: 'usr_neha',   name: 'Neha',   password: 'neha123'   },
+        { id: 'usr_agney',  name: 'Agney',  password: 'agney123'  },
+        { id: 'usr_nived',  name: 'Nived',  password: 'nived123'  },
+      ],
+      video: [
+        { id: 'usr_sijin',  name: 'Sijin',  password: 'sijin123'  },
+        { id: 'usr_shawn',  name: 'Shawn',  password: 'shawn123'  },
+        { id: 'usr_adil',   name: 'Adil',   password: 'adil123'   },
+        { id: 'usr_hari',   name: 'Hari',   password: 'hari123'   },
+        { id: 'usr_abhay',  name: 'Abhay',  password: 'abhay123'  },
+      ],
+      social: [
+        { id: 'usr_megha',   name: 'Megha',   password: 'megha123'   },
+        { id: 'usr_christi', name: 'Christi', password: 'christi123' },
+      ],
+      content: [
+        { id: 'usr_dilna', name: 'Dilna', password: 'mango123' },
+      ],
+      admin: { id: 'usr_admin', name: 'Admin', password: 'avocado123' }
+    };
+
+    const ROLE_LABELS = {
+      designer: 'Designer',
+      video:    'Video Editor',
+      social:   'Social Media Team',
+      content:  'Content Writer'
+    };
+    const ROLE_ICONS = {
+      designer: '🎨',
+      video:    '🎬',
+      social:   '📱',
+      content:  '✍️'
+    };
+
+    // ── State ──
+    let selectedUser    = null;  // { id, name, password, role }
+    let currentRole     = null;
+
+    // ══════════════════════════════════════════
+    // MOUSE GLOW FOR ROLE CARDS
+    // ══════════════════════════════════════════
+    document.addEventListener('mousemove', (e) => {
+      document.querySelectorAll('.role-card').forEach(card => {
+        const r = card.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width)  * 100;
+        const y = ((e.clientY - r.top)  / r.height) * 100;
+        card.style.setProperty('--mx', `${x}%`);
+        card.style.setProperty('--my', `${y}%`);
+      });
+    });
+
+    // ══════════════════════════════════════════
+    // SCREEN TRANSITIONS
+    // ══════════════════════════════════════════
+    function showScreen(toId) {
+      const all = document.querySelectorAll('.screen');
+      const next = document.getElementById(toId);
+
+      all.forEach(s => {
+        if (s.classList.contains('active') && s !== next) {
+          s.style.animation = 'fadeOut 0.3s forwards';
+          setTimeout(() => {
+            s.classList.remove('active');
+            s.style.animation = '';
+          }, 280);
+        }
+      });
+
+      setTimeout(() => {
+        next.style.animation = '';
+        next.classList.add('active');
+        void next.offsetWidth; // reflow
+        next.style.animation = 'fadeUp 0.4s forwards';
+      }, 150);
+    }
+
+    // ══════════════════════════════════════════
+    // STEP 1: SELECT ROLE
+    // ══════════════════════════════════════════
+    function selectRole(role, label, icon) {
+      currentRole = role;
+
+      // Update breadcrumb
+      document.getElementById('roleCrumbIcon').textContent  = icon;
+      document.getElementById('roleCrumbLabel').textContent = label;
+
+      // Populate name grid
+      const grid  = document.getElementById('nameGrid');
+      grid.innerHTML = '';
+      const users = USERS[role];
+
+      users.forEach(user => {
+        const card = document.createElement('button');
+        card.className = 'name-card';
+        card.id = `btn-user-${user.id}`;
+        card.innerHTML = `
+          <div class="name-avatar">${user.name.charAt(0).toUpperCase()}</div>
+          <span class="name-label">${user.name}</span>
+        `;
+        card.addEventListener('click', () => selectUser(user, role));
+        grid.appendChild(card);
+      });
+
+      showScreen('screenName');
+    }
+
+    function goBack() {
+      showScreen('screenRole');
+      selectedUser = null;
+      currentRole  = null;
+    }
+
+    // ══════════════════════════════════════════
+    // STEP 2: SELECT USER → OPEN PW MODAL
+    // ══════════════════════════════════════════
+    function selectUser(user, role) {
+      // Bind the exact user object (with their specific password)
+      selectedUser = { ...user, role };
+      openPasswordModal(user.name, false);
+    }
+
+    // ══════════════════════════════════════════
+    // ADMIN FLOW
+    // ══════════════════════════════════════════
+    function openAdminModal() {
+      selectedUser = { ...USERS.admin, role: 'admin' };
+      openPasswordModal('Admin', true);
+    }
+
+    // ══════════════════════════════════════════
+    // PASSWORD MODAL
+    // ══════════════════════════════════════════
+    const pwOverlay = document.getElementById('pwOverlay');
+    const pwInput   = document.getElementById('pwInput');
+    const pwError   = document.getElementById('pwError');
+    const pwForm    = document.getElementById('pwForm');
+
+    function openPasswordModal(userName, isAdmin) {
+      document.getElementById('pwUserName').textContent  = userName;
+      document.getElementById('pwUserLabel').textContent = userName;
+
+      pwInput.value = '';
+      pwError.classList.remove('show');
+      pwInput.type = 'password';
+      document.getElementById('pwToggle').textContent = '👁';
+
+      pwOverlay.classList.add('open');
+
+      requestAnimationFrame(() => {
+        setTimeout(() => pwInput.focus(), 200);
+      });
+    }
+
+    function closePwModal() {
+      pwOverlay.classList.remove('open');
+      selectedUser = null;
+    }
+
+    document.getElementById('pwClose').addEventListener('click', closePwModal);
+
+    // Close on backdrop click
+    pwOverlay.addEventListener('click', (e) => {
+      if (e.target === pwOverlay) closePwModal();
+    });
+
+    // Toggle password visibility
+    document.getElementById('pwToggle').addEventListener('click', () => {
+      const isText = pwInput.type === 'text';
+      pwInput.type = isText ? 'password' : 'text';
+      document.getElementById('pwToggle').textContent = isText ? '👁' : '🙈';
+    });
+
+    // ══════════════════════════════════════════
+    // PASSWORD SUBMIT — STRICT VALIDATION
+    // ══════════════════════════════════════════
+    pwForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      if (!selectedUser) return;
+
+      const entered         = pwInput.value;
+      const correctPassword = selectedUser.password;
+
+      // STRICT: compare entered against THIS specific user's password only
+      if (entered === correctPassword) {
+        // ── SUCCESS ──
+        pwError.classList.remove('show');
+        pwOverlay.classList.remove('open');
+        triggerSuccess(selectedUser.name, selectedUser.role);
+      } else {
+        // ── FAIL ──
+        document.getElementById('pwErrorText').textContent = 'Incorrect password. Try again.';
+        pwError.classList.add('show');
+        pwInput.value = '';
+
+        // Shake the card
+        const card = document.getElementById('pwCard');
+        card.classList.remove('shake');
+        void card.offsetWidth;
+        card.classList.add('shake');
+        setTimeout(() => card.classList.remove('shake'), 500);
+
+        // Refocus
+        setTimeout(() => pwInput.focus(), 100);
+      }
+    });
+
+    // ══════════════════════════════════════════
+    // SUCCESS → REDIRECT TO DASHBOARD
+    // ══════════════════════════════════════════
+    function triggerSuccess(name, role) {
+      const overlay = document.getElementById('successOverlay');
+      document.getElementById('successText').textContent = `Logging in as ${name}…`;
+      overlay.classList.add('show');
+
+      // Store session for dashboard to pick up
+      sessionStorage.setItem('cm_user_id',   selectedUser.id);
+      sessionStorage.setItem('cm_user_name', name);
+      sessionStorage.setItem('cm_user_role', role);
+
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1200);
+    }
+  </script>
 </body>
 </html>

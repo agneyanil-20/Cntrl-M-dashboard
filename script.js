@@ -15,18 +15,20 @@ if (SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE' && window.supabase) {
 const mockProfiles = [
   { id: 'usr_admin', name: 'Admin', role: 'admin', auth: 'avocado123' },
   // Designers
-  { id: 'usr_neha', name: 'Neha', role: 'designer', avatar: 'NF', color: '#ff6b6b', auth: 'neha123' },
-  { id: 'usr_agney', name: 'Agney', role: 'designer', avatar: 'AM', color: '#ff6b6b', auth: 'agney123' },
-  { id: 'usr_nived', name: 'Nived', role: 'designer', avatar: 'NM', color: '#ff6b6b', auth: 'nived123' },
+  { id: 'usr_neha', name: 'Neha', role: 'designer', avatar: 'NF', auth: 'neha123' },
+  { id: 'usr_agney', name: 'Agney', role: 'designer', avatar: 'AM', auth: 'agney123' },
+  { id: 'usr_nived', name: 'Nived', role: 'designer', avatar: 'NM', auth: 'nived123' },
   // Video Editors
-  { id: 'usr_sijin', name: 'Sijin', role: 'video', avatar: 'SM', color: '#45aaf2', auth: 'sijin123' },
-  { id: 'usr_shawn', name: 'Shawn', role: 'video', avatar: 'SM', color: '#45aaf2', auth: 'shawn123' },
-  { id: 'usr_adil', name: 'Adil', role: 'video', avatar: 'AM', color: '#45aaf2', auth: 'adil123' },
-  { id: 'usr_hari', name: 'Hari', role: 'video', avatar: 'HM', color: '#45aaf2', auth: 'hari123' },
-  { id: 'usr_abhay', name: 'Abhay', role: 'video', avatar: 'AM', color: '#45aaf2', auth: 'abhay123' },
+  { id: 'usr_sijin', name: 'Sijin', role: 'video', avatar: 'SM', auth: 'sijin123' },
+  { id: 'usr_shawn', name: 'Shawn', role: 'video', avatar: 'SM', auth: 'shawn123' },
+  { id: 'usr_adil', name: 'Adil', role: 'video', avatar: 'AM', auth: 'adil123' },
+  { id: 'usr_hari', name: 'Hari', role: 'video', avatar: 'HM', auth: 'hari123' },
+  { id: 'usr_abhay', name: 'Abhay', role: 'video', avatar: 'AM', auth: 'abhay123' },
   // Social Media
-  { id: 'usr_megha', name: 'Megha', role: 'social', avatar: 'MF', color: '#f7b731', auth: 'megha123' },
-  { id: 'usr_christi', name: 'Christi', role: 'social', avatar: 'CM', color: '#f7b731', auth: 'christi123' }
+  { id: 'usr_megha', name: 'Megha', role: 'social', avatar: 'MF', auth: 'megha123' },
+  { id: 'usr_christi', name: 'Christi', role: 'social', avatar: 'CM', auth: 'christi123' },
+  // Content Writer
+  { id: 'usr_dilna', name: 'Dilna', role: 'content', avatar: 'DF', auth: 'mango123' }
 ];
 
 const mockClients = [
@@ -147,25 +149,15 @@ const state = new AppState();
 // INITIALIZATION & ENTRY EXPERIENCE
 // ══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log("Cntrl M: DOMContentLoaded firing...");
   const isLoginPage = window.location.pathname.includes('login.html');
   if (isLoginPage) return;
 
-  // Display Role Selection screen automatically unless bypassed
-  const roleScreen = document.getElementById('roleScreen');
-  
-  if(window.location.hash !== '#app') {
-    roleScreen.style.display = 'flex';
-  } else {
-    // Development bypass
-    roleScreen.style.display = 'none';
-    finalizeLogin('usr_admin'); // default bypass
-  }
-
   setupBaseUI();
   setupModals();
-  setupLiquidHover(); 
+  setupLiquidHover();
   state.subscribe(renderDashboard);
-  
+
   // Theme Toggle Handler
   const themeToggle = document.getElementById('themeToggle');
   if(themeToggle) {
@@ -173,70 +165,126 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.body.classList.toggle('light-mode');
     });
   }
-  
-  // Auth Form Handlers
-  document.getElementById('adminAuthForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const pw = document.getElementById('adminPassword').value;
-    const targetUserId = document.getElementById('adminAuthForm').dataset.userid;
-    
-    // Auth Validation
-    let valid = false;
-    let targetRole = 'admin';
-    
-    if (targetUserId === 'admin') {
-       if (pw === 'avocado123') valid = true;
-    } else {
-       const user = state.profiles.find(p => p.id === targetUserId);
-       if (user && pw === user.auth) {
-           valid = true;
-           targetRole = user.role;
-       }
-    }
 
-    if(valid) {
-      document.getElementById('adminAuthModal').classList.remove('active');
-      finalizeLogin(targetUserId === 'admin' ? 'usr_admin' : targetUserId, targetRole);
-    } else {
-      document.getElementById('adminAuthError').style.display = 'block';
-    }
-  });
+  // ══════════════════════════════════════════
+  // CHECK SESSION FROM login.html
+  // ══════════════════════════════════════════
+  const sessionUserId   = sessionStorage.getItem('cm_user_id');
+  const sessionUserRole = sessionStorage.getItem('cm_user_role');
+
+  if (sessionUserId && sessionUserRole) {
+    // Hide both entry screens immediately — no need to show them
+    const roleScreen = document.getElementById('roleScreen');
+    const nameScreen = document.getElementById('nameScreen');
+    if (roleScreen) { roleScreen.style.display = 'none'; }
+    if (nameScreen) { nameScreen.style.display = 'none'; }
+
+    // Auto-login with the user selected on the login page
+    finalizeLogin(sessionUserId, sessionUserRole);
+
+    // Auth modal form still needed if admin wants to re-auth from within dashboard
+    _bindAdminAuthForm();
+    return;
+  }
+
+  // ── No session: show role screen as normal (direct index.html access) ──
+  const roleScreen = document.getElementById('roleScreen');
+  if(roleScreen) {
+    roleScreen.style.display = 'flex';
+    roleScreen.style.opacity = '1';
+  }
+
+  _bindAdminAuthForm();
 
   if(supabase) {
     supabase.channel('public:*').on('postgres_changes', { event: '*', schema: 'public' }, () => {}).subscribe();
   }
 });
 
+function _bindAdminAuthForm() {
+  const form = document.getElementById('adminAuthForm');
+  if (!form || form._bound) return;
+  form._bound = true;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const pw           = document.getElementById('adminPassword').value;
+    const targetUserId = form.dataset.userid;
+
+    let valid      = false;
+    let targetRole = 'admin';
+
+    if (targetUserId === 'admin') {
+      if (pw === 'avocado123') valid = true;
+    } else {
+      const user = state.profiles.find(p => p.id === targetUserId);
+      if (user && pw === user.auth) {
+        valid      = true;
+        targetRole = user.role;
+      }
+    }
+
+    if (valid) {
+      document.getElementById('adminAuthError').style.display = 'none';
+      document.getElementById('adminAuthModal').classList.remove('active');
+      finalizeLogin(targetUserId === 'admin' ? 'usr_admin' : targetUserId, targetRole);
+    } else {
+      const errorMsg = document.getElementById('adminAuthError');
+      errorMsg.textContent = 'Incorrect password';
+      errorMsg.style.display = 'block';
+      const modalContent = document.querySelector('#adminAuthModal .modal-content');
+      if (modalContent) {
+        modalContent.style.transform = 'translateY(0) scale(1) translateX(10px)';
+        setTimeout(() => modalContent.style.transform = 'translateY(0) scale(1)', 100);
+      }
+    }
+  });
+}
+
 window.selectRoleGroup = function(role) {
+  console.log('selectRoleGroup called with:', role);
   const grid = document.getElementById('nameGrid');
   grid.innerHTML = '';
   const users = state.profiles.filter(p => p.role === role);
+  console.log('Users found:', users.map(u => u.name));
   
   users.forEach(u => {
-    // Icon logic based on avatar string hack for demo (M/F)
-    const icon = u.avatar.includes('F') ? 'ph-user-female' : 'ph-user';
-    
+    const icon = u.avatar && u.avatar.includes('F') ? 'ph-user-female' : 'ph-user';
     grid.insertAdjacentHTML('beforeend', `
        <button class="role-card" onclick="selectUserForAuth('${u.id}')">
-          <i class="ph ${icon}"></i>
-          <span>${u.name}</span>
+          <i class="ph ${icon}" style="font-size:28px;"></i>
+          <span class="role-name">${u.name}</span>
        </button>
     `);
   });
 
-  document.getElementById('roleScreen').style.display = 'none';
-  document.getElementById('nameScreen').style.display = 'flex';
+  const roleScreen = document.getElementById('roleScreen');
+  const nameScreen = document.getElementById('nameScreen');
+  
+  roleScreen.style.opacity = '0';
+  setTimeout(() => {
+    roleScreen.style.display = 'none';
+    nameScreen.style.display = 'flex';
+    setTimeout(() => nameScreen.style.opacity = '1', 50);
+  }, 300);
 };
 
 window.backToRoles = function() {
-  document.getElementById('nameScreen').style.display = 'none';
-  document.getElementById('roleScreen').style.display = 'flex';
+  const roleScreen = document.getElementById('roleScreen');
+  const nameScreen = document.getElementById('nameScreen');
+  
+  nameScreen.style.opacity = '0';
+  setTimeout(() => {
+    nameScreen.style.display = 'none';
+    roleScreen.style.display = 'flex';
+    setTimeout(() => roleScreen.style.opacity = '1', 50);
+  }, 300);
 };
 
 window.selectUserForAuth = function(userId) {
   const user = state.profiles.find(p => p.id === userId);
   const modal = document.getElementById('adminAuthModal');
-  modal.querySelector('h2').textContent = 'Welcome, ' + user.name;
+  modal.querySelector('h2').textContent = `Logging in as ${user.name}`;
   document.getElementById('adminAuthForm').dataset.userid = userId;
   document.getElementById('adminPassword').value = '';
   document.getElementById('adminAuthError').style.display = 'none';
@@ -256,38 +304,68 @@ function finalizeLogin(userId, role = 'admin') {
   currentUserId = userId;
   currentUserRole = role;
   
-  document.getElementById('roleScreen').style.display = 'none';
-  document.getElementById('nameScreen').style.display = 'none';
-  document.getElementById('splashScreen').style.display = 'none';
+  // Fade out entry screens
+  const roleScreen = document.getElementById('roleScreen');
+  const nameScreen = document.getElementById('nameScreen');
+  const adminAuthModal = document.getElementById('adminAuthModal');
   
-  const layout = document.getElementById('mainAppLayout');
-  layout.style.display = 'flex';
-  setTimeout(() => layout.style.opacity = '1', 50);
+  if(roleScreen) roleScreen.style.opacity = '0';
+  if(nameScreen) nameScreen.style.opacity = '0';
+  if(adminAuthModal) adminAuthModal.classList.remove('active');
+  
+  setTimeout(() => {
+    if(roleScreen) roleScreen.style.display = 'none';
+    if(nameScreen) nameScreen.style.display = 'none';
+    
+    const layout = document.getElementById('mainAppLayout');
+    if(layout) {
+      layout.style.display = 'flex';
+      setTimeout(() => { layout.style.opacity = '1'; }, 50);
+    }
 
-  // Global UI updates depending on role
-  const greeting = document.getElementById('userGreeting');
-  if (role === 'admin') greeting.textContent = 'Admin Dashboard Control.';
-  else if (role === 'social') greeting.textContent = 'Social Media Pipeline ready for deployment.';
-  else greeting.textContent = 'Welcome back. Here are your assignments.';
+    // All DOM updates that require mainAppLayout to be visible
+    const greeting = document.getElementById('userGreeting');
+    if (greeting) {
+      if (role === 'admin') greeting.textContent = 'Admin Dashboard — Full Control.';
+      else if (role === 'social') greeting.textContent = 'Social Media Pipeline ready.';
+      else if (role === 'content') greeting.textContent = 'Content workspace loaded.';
+      else greeting.textContent = 'Welcome back. Here are your assignments.';
+    }
 
-  // Avatar update
-  const user = state.profiles.find(p => p.id === userId);
-  const avatarText = user ? user.avatar : 'CM';
-  const avatarHtml = document.getElementById('userAvatar');
-  if(avatarHtml) avatarHtml.innerHTML = `<span>${avatarText}</span>`;
+    // Avatar update
+    const user = state.profiles.find(p => p.id === userId);
+    const avatarText = user && user.avatar ? user.avatar : 'CM';
+    const avatarHtml = document.getElementById('userAvatar');
+    if(avatarHtml) avatarHtml.innerHTML = `<span>${avatarText}</span>`;
 
-  if (role === 'admin') {
-    document.getElementById('adminControls').style.display = 'flex';
-    document.querySelectorAll('[data-role="admin-only"]').forEach(el => el.style.display = '');
-  } else {
-    document.getElementById('adminControls').style.display = 'none';
-    document.querySelectorAll('[data-role="admin-only"]').forEach(el => el.style.display = 'none');
-  }
+    const adminControls = document.getElementById('adminControls');
+    if(adminControls) {
+      adminControls.style.display = role === 'admin' ? 'flex' : 'none';
+    }
+    document.querySelectorAll('[data-role="admin-only"]').forEach(el => {
+      el.style.display = role === 'admin' ? '' : 'none';
+    });
 
-  // Show generic tabs for everyone
-  document.getElementById('clientViewTabs').style.display = 'flex';
-  window.switchView('my_clients'); 
-  renderDashboard();
+    const viewTabs = document.getElementById('clientViewTabs');
+    if(viewTabs) viewTabs.style.display = 'flex';
+    
+    window.currentViewMode = 'my_clients';
+    renderDashboard();
+    
+    // Logout handler — clear session and go back to login page
+    const logoutBtn = document.getElementById('logoutBtn');
+    if(logoutBtn) {
+      logoutBtn.onclick = () => {
+        layout.style.opacity = '0';
+        setTimeout(() => {
+          sessionStorage.removeItem('cm_user_id');
+          sessionStorage.removeItem('cm_user_name');
+          sessionStorage.removeItem('cm_user_role');
+          window.location.href = 'login.html';
+        }, 400);
+      };
+    }
+  }, 450);
 }
 
 window.currentViewMode = 'my_clients';
