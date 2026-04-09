@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cntrl M — Dashboard</title>
+  <meta name="description" content="Cntrl M digital marketing agency internal dashboard for managing clients, tasks, and team workload." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/phosphor-icons/1.4.2/css/phosphor.min.css" />
+  <link rel="stylesheet" href="styles.css?v=3" />
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <!-- ═══════════ NEW ENTRY EXPERIENCE ═══════════ -->
+  <div id="roleScreen" class="entry-overlay">
+    <div class="role-container">
+      <h1 class="role-title">Who are you?</h1>
+      <div class="role-grid">
+        <button class="role-card" onclick="selectRoleGroup('designer')">
+          <i class="ph ph-bezier-curve"></i>
+          <span>Designer</span>
+        </button>
+        <button class="role-card" onclick="selectRoleGroup('video')">
+          <i class="ph ph-video-camera"></i>
+          <span>Video Editor</span>
+        </button>
+        <button class="role-card" onclick="selectRoleGroup('social')">
+          <i class="ph ph-instagram-logo"></i>
+          <span>Social Media Team</span>
+        </button>
+      </div>
+      <button class="admin-lock-btn" onclick="openAdminAuth()">
+        <i class="ph ph-lock-key"></i>
+      </button>
+    </div>
+  </div>
+
+  <div id="nameScreen" class="entry-overlay" style="display: none;">
+    <div class="role-container">
+      <button class="back-btn" onclick="backToRoles()"><i class="ph ph-arrow-left"></i> Back</button>
+      <h1 class="role-title">Select your profile</h1>
+      <div class="role-grid" id="nameGrid">
+        <!-- Injected via JS based on role -->
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="adminAuthModal">
+    <div class="modal-content" style="max-width: 350px; text-align: center;">
+      <h2 style="margin-bottom: 24px;">Admin Access</h2>
+      <form id="adminAuthForm">
+        <input type="password" id="adminPassword" placeholder="Enter Password" style="width: 100%; margin-bottom: 16px;" required/>
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Authenticate</button>
+        <p id="adminAuthError" style="color: var(--urgent); font-size: 12px; display: none; margin-top: 10px;">Incorrect Password</p>
+      </form>
+    </div>
+  </div>
+  <!-- ═══════════════════════════════════════════ -->
+
+  <!-- Mobile Hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle Menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="layout" id="mainAppLayout" style="display: none; opacity: 0; transition: opacity 0.5s ease;">
+
+    <!-- ═══════════ SIDEBAR ═══════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-bracket">[</span>
+        <span class="logo-text">Cntrl M</span>
+        <span class="logo-bracket">]</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" id="nav-dashboard">
+          <i class="ph ph-squares-four nav-icon"></i>
+          <span>Dashboard</span>
+          <span class="nav-dot"></span>
+        </a>
+        <a href="#" class="nav-item" id="nav-clients">
+          <i class="ph ph-briefcase nav-icon"></i>
+          <span>Clients</span>
+        </a>
+        <a href="#" class="nav-item" id="nav-tasks">
+          <i class="ph ph-check-square nav-icon"></i>
+          <span>Tasks</span>
+        </a>
+        <a href="#" class="nav-item" id="nav-team">
+          <i class="ph ph-users nav-icon"></i>
+          <span>Team</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-status">
+          <span class="status-dot"></span>
+          <span>All systems nominal</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ═══════════ MAIN CONTENT ═══════════ -->
+    <div class="main-wrapper">
+
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-date">
+            <i class="ph ph-calendar-blank"></i>
+            <span id="currentDate">Loading...</span>
+          </div>
+        </div>
+        <div class="topbar-center">
+          <div class="search-bar">
+            <i class="ph ph-magnifying-glass"></i>
+            <input type="text" placeholder="Search clients, tasks, team..." id="globalSearch" />
+            <span class="search-shortcut">⌘K</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-icon-btn" id="themeToggle" aria-label="Toggle Theme">
+            <i class="ph ph-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" aria-label="Notifications">
+            <i class="ph ph-bell"></i>
+            <span class="notif-badge">4</span>
+          </button>
+          <div class="profile-avatar" id="userAvatar">
+            <span>CM</span>
+          </div>
+          <button id="logoutBtn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; margin-left:10px;">
+            <i class="ph ph-sign-out" style="font-size:20px;"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN DASHBOARD -->
+      <main class="dashboard">
+
+        <!-- PAGE TITLE -->
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle" id="userGreeting">Here's what's happening across all your clients today.</p>
+          </div>
+          <div id="adminControls" style="display: none; gap: 12px;">
+            <button class="btn-primary" id="openClientModalBtn">
+              <i class="ph ph-plus"></i>
+              New Client
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW TOGGLES -->
+        <div class="view-tabs" id="clientViewTabs" style="display: none; margin-bottom: 32px;">
+          <button class="view-tab active" onclick="switchView('my_clients')">My Clients</button>
+          <button class="view-tab" onclick="switchView('all_clients')">All Clients</button>
+          <button class="view-tab" onclick="switchView('ready_post')">Ready to Post <span class="badge" id="readyCount">0</span></button>
+        </div>
+
+        <!-- ═══ A. DEADLINE STRIP ═══ -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="ph ph-warning-circle"></i>
+              Upcoming Deadlines
+            </h2>
+            <a href="#" class="section-link">View all</a>
+          </div>
+          <div class="deadline-strip" id="deadlineStrip">
+             <!-- Rendered via JS -->
+          </div>
+        </section>
+
+        <!-- ═══ B. OVERVIEW CARDS ═══ -->
+        <section class="section">
+          <div class="overview-grid" id="overviewGrid">
+             <!-- Rendered via JS -->
+          </div>
+        </section>
+
+        <!-- ═══ BOTTOM ROW: Client Progress + Team Workload ═══ -->
+        <div class="bottom-row">
+
+          <!-- ═══ C. CLIENT PROGRESS GRID ═══ -->
+          <section class="section client-progress-section">
+            <div class="section-header">
+              <h2 class="section-title">
+                <i class="ph ph-chart-bar"></i>
+                Client Progress
+              </h2>
+              <a href="#" class="section-link">View all</a>
+            </div>
+            <div class="client-grid" id="clientGrid">
+              <!-- Rendered via JS -->
+            </div>
+          </section>
+
+          <!-- ═══ D. TEAM WORKLOAD ═══ -->
+          <section class="section team-section">
+            <div class="section-header">
+              <h2 class="section-title">
+                <i class="ph ph-users-three"></i>
+                Team Workload
+              </h2>
+              <a href="#" class="section-link">Assign</a>
+            </div>
+            <div class="team-list" id="teamList">
+              <!-- Rendered via JS -->
+            </div>
+          </section>
+
+        </div><!-- /bottom-row -->
+
+      </main>
+    </div><!-- /main-wrapper -->
+  </div><!-- /layout -->
+
+  <!-- ═══════════ MODALS ═══════════ -->
+  <div class="modal-overlay" id="clientModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create Client & Start Cycle</h2>
+        <button class="modal-close" id="closeClientModal"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="createClientForm">
+        <div class="form-group">
+          <label>Client Name</label>
+          <input type="text" id="clientName" required placeholder="e.g. Swiggy" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cycle Start Day</label>
+            <input type="number" id="cycleStart" min="1" max="31" required placeholder="1" />
+          </div>
+          <div class="form-group">
+            <label>Cycle End Day</label>
+            <input type="number" id="cycleEnd" min="1" max="31" required placeholder="30" />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Deliverables Template</label>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">These will automatically generate tasks for each new cycle.</p>
+          
+          <div class="deliverables-input-group">
+            <div class="deliv-row">
+              <input type="text" class="deliv-type" value="Posters" required readonly/>
+              <input type="number" class="deliv-qty" placeholder="Qty" value="10" required min="0"/>
+            </div>
+            <div class="deliv-row">
+              <input type="text" class="deliv-type" value="Videos" required readonly/>
+              <input type="number" class="deliv-qty" placeholder="Qty" value="4" required min="0"/>
+            </div>
+            <div class="deliv-row">
+              <input type="text" class="deliv-type" value="Motion Graphics" required readonly/>
+              <input type="number" class="deliv-qty" placeholder="Qty" value="2" required min="0"/>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;" id="submitClientBtn">
+          Create Client + Start First Cycle
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="taskModal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 id="taskModalTitle">Task Details</h2>
+        <button class="modal-close" id="closeTaskModal"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="taskForm">
+        <input type="hidden" id="taskId" />
+        
+        <div class="form-group" id="assigneeGroup" data-role="admin-only">
+          <label>Assignee</label>
+          <select id="taskAssignee" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--border-subtle); border-radius:8px; padding:12px 16px; color:var(--text-main); font-family:inherit;">
+            <option value="">Unassigned</option>
+            <!-- Rendered via JS -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select id="taskStatus" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid var(--border-subtle); border-radius:8px; padding:12px 16px; color:var(--text-main); font-family:inherit;">
+            <option value="pending">Pending</option>
+            <option value="in progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Submission Link</label>
+          <input type="url" id="taskLink" placeholder="https://..." />
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">
+          Save Task
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js?v=3"></script>
+</body>
+</html>

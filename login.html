@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cntrl M — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/phosphor-icons/1.4.2/css/phosphor.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(circle at center, #121821 0%, #000000 100%);
+    }
+    .auth-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 40px;
+      background: rgba(18, 24, 33, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      backdrop-filter: blur(10px);
+      text-align: center;
+    }
+    .auth-logo {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .auth-logo .logo-bracket { color: var(--primary); text-shadow: var(--glow); }
+    .auth-subtitle {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .form-group { text-align: left; margin-bottom: 20px; }
+    .btn-login {
+      width: 100%;
+      justify-content: center;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    #authError {
+      color: var(--urgent);
+      font-size: 13px;
+      margin-top: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container">
+    <div class="auth-logo">
+      <span class="logo-bracket">[</span> Cntrl M <span class="logo-bracket">]</span>
+    </div>
+    <div class="auth-subtitle">Sign in to your dashboard</div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="email" required placeholder="you@cntrlm.agency" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" required placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn-primary btn-login">
+        Sign In <i class="ph ph-arrow-right"></i>
+      </button>
+      <div id="authError">Invalid login credentials.</div>
+      
+      <!-- Placeholder config reminder -->
+      <div style="margin-top:24px; font-size:11px; color:var(--text-muted); padding:10px; border:1px dashed var(--border-bright); border-radius:8px;">
+        <i class="ph ph-warning-circle"></i> Supabase is not configured yet. Set `SUPABASE_URL` and `SUPABASE_KEY` in script.js to enable real authentication. 
+        <br><br><b>Mock Login:</b> Use any email/password to enter.
+      </div>
+    </form>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
