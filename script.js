@@ -69,7 +69,16 @@ let mockTasks = [
 ];
 
 let currentUserId = null;
-let currentUserRole = 'admin'; // For demo, change via code to 'team_member'
+let currentUserRole = 'admin'; 
+
+// ── Screen States ──
+const APP_STATES = {
+  ROLE_SELECTION: 'roleSelection',
+  NAME_SELECTION: 'nameSelection',
+  PASSWORD_SCREEN: 'passwordScreen',
+  DASHBOARD: 'dashboard'
+};
+let currentAppState = APP_STATES.ROLE_SELECTION;
 
 // ══════════════════════════════════════════
 // STATE MANAGEMENT & INTELLIGENCE
@@ -173,33 +182,101 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sessionUserRole = sessionStorage.getItem('cm_user_role');
 
   if (sessionUserId && sessionUserRole) {
-    // Hide both entry screens immediately — no need to show them
-    const roleScreen = document.getElementById('roleScreen');
-    const nameScreen = document.getElementById('nameScreen');
-    if (roleScreen) { roleScreen.style.display = 'none'; }
-    if (nameScreen) { nameScreen.style.display = 'none'; }
-
-    // Auto-login with the user selected on the login page
-    finalizeLogin(sessionUserId, sessionUserRole);
-
-    // Auth modal form still needed if admin wants to re-auth from within dashboard
+    navigateToState(APP_STATES.DASHBOARD, { userId: sessionUserId, role: sessionUserRole });
     _bindAdminAuthForm();
     return;
   }
 
-  // ── No session: show role screen as normal (direct index.html access) ──
-  const roleScreen = document.getElementById('roleScreen');
-  if(roleScreen) {
-    roleScreen.style.display = 'flex';
-    roleScreen.style.opacity = '1';
-  }
-
+  // No session: start at role selection
+  navigateToState(APP_STATES.ROLE_SELECTION);
   _bindAdminAuthForm();
 
   if(supabase) {
     supabase.channel('public:*').on('postgres_changes', { event: '*', schema: 'public' }, () => {}).subscribe();
   }
 });
+
+/**
+ * Global Navigation System
+ * States: roleSelection, nameSelection, passwordScreen, dashboard
+ */
+window.navigateToState = function(state, data = {}) {
+  console.log(`Transitioning to state: ${state}`, data);
+  currentAppState = state;
+
+  const roleScreen = document.getElementById('roleScreen');
+  const nameScreen = document.getElementById('nameScreen');
+  const passModal = document.getElementById('adminAuthModal');
+  const dashboard = document.getElementById('mainAppLayout');
+
+  // Helper to hide all with fade
+  const hideAll = () => {
+    [roleScreen, nameScreen].forEach(s => {
+      if (s) {
+        s.style.opacity = '0';
+        setTimeout(() => s.style.display = 'none', 300);
+      }
+    });
+    if (passModal) passModal.classList.remove('active');
+  };
+
+  switch(state) {
+    case APP_STATES.ROLE_SELECTION:
+      hideAll();
+      setTimeout(() => {
+        roleScreen.style.display = 'flex';
+        setTimeout(() => roleScreen.style.opacity = '1', 50);
+      }, 350);
+      break;
+
+    case APP_STATES.NAME_SELECTION:
+      // data.role expected
+      _populateNameGrid(data.role);
+      roleScreen.style.opacity = '0';
+      setTimeout(() => {
+        roleScreen.style.display = 'none';
+        nameScreen.style.display = 'flex';
+        setTimeout(() => nameScreen.style.opacity = '1', 50);
+      }, 300);
+      break;
+
+    case APP_STATES.PASSWORD_SCREEN:
+      // data.userId expected
+      const user = state.profiles.find(p => p.id === data.userId);
+      if (!user && data.userId !== 'admin') return;
+      
+      const userName = data.userId === 'admin' ? 'Admin' : user.name;
+      passModal.querySelector('h2').textContent = `Logging in as ${userName}`;
+      document.getElementById('adminAuthForm').dataset.userid = data.userId;
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminAuthError').style.display = 'none';
+      passModal.classList.add('active');
+      setTimeout(() => document.getElementById('adminPassword').focus(), 300);
+      break;
+
+    case APP_STATES.DASHBOARD:
+      hideAll();
+      finalizeLogin(data.userId || sessionUserId, data.role || sessionUserRole);
+      break;
+  }
+};
+
+function _populateNameGrid(role) {
+  const grid = document.getElementById('nameGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const users = mockProfiles.filter(p => p.role === role);
+  
+  users.forEach(u => {
+    const icon = u.avatar && u.avatar.includes('F') ? 'ph-user-female' : 'ph-user';
+    grid.insertAdjacentHTML('beforeend', `
+       <button class="role-card" onclick="navigateToState('passwordScreen', { userId: '${u.id}' })">
+          <i class="ph ${icon}" style="font-size:28px;"></i>
+          <span class="role-name">${u.name}</span>
+       </button>
+    `);
+  });
+}
 
 function _bindAdminAuthForm() {
   const form = document.getElementById('adminAuthForm');
@@ -227,7 +304,7 @@ function _bindAdminAuthForm() {
     if (valid) {
       document.getElementById('adminAuthError').style.display = 'none';
       document.getElementById('adminAuthModal').classList.remove('active');
-      finalizeLogin(targetUserId === 'admin' ? 'usr_admin' : targetUserId, targetRole);
+      navigateToState(APP_STATES.DASHBOARD, { userId: (targetUserId === 'admin' ? 'usr_admin' : targetUserId), role: targetRole });
     } else {
       const errorMsg = document.getElementById('adminAuthError');
       errorMsg.textContent = 'Incorrect password';
@@ -242,62 +319,19 @@ function _bindAdminAuthForm() {
 }
 
 window.selectRoleGroup = function(role) {
-  console.log('selectRoleGroup called with:', role);
-  const grid = document.getElementById('nameGrid');
-  grid.innerHTML = '';
-  const users = state.profiles.filter(p => p.role === role);
-  console.log('Users found:', users.map(u => u.name));
-  
-  users.forEach(u => {
-    const icon = u.avatar && u.avatar.includes('F') ? 'ph-user-female' : 'ph-user';
-    grid.insertAdjacentHTML('beforeend', `
-       <button class="role-card" onclick="selectUserForAuth('${u.id}')">
-          <i class="ph ${icon}" style="font-size:28px;"></i>
-          <span class="role-name">${u.name}</span>
-       </button>
-    `);
-  });
-
-  const roleScreen = document.getElementById('roleScreen');
-  const nameScreen = document.getElementById('nameScreen');
-  
-  roleScreen.style.opacity = '0';
-  setTimeout(() => {
-    roleScreen.style.display = 'none';
-    nameScreen.style.display = 'flex';
-    setTimeout(() => nameScreen.style.opacity = '1', 50);
-  }, 300);
+  navigateToState(APP_STATES.NAME_SELECTION, { role });
 };
 
 window.backToRoles = function() {
-  const roleScreen = document.getElementById('roleScreen');
-  const nameScreen = document.getElementById('nameScreen');
-  
-  nameScreen.style.opacity = '0';
-  setTimeout(() => {
-    nameScreen.style.display = 'none';
-    roleScreen.style.display = 'flex';
-    setTimeout(() => roleScreen.style.opacity = '1', 50);
-  }, 300);
+  navigateToState(APP_STATES.ROLE_SELECTION);
 };
 
 window.selectUserForAuth = function(userId) {
-  const user = state.profiles.find(p => p.id === userId);
-  const modal = document.getElementById('adminAuthModal');
-  modal.querySelector('h2').textContent = `Logging in as ${user.name}`;
-  document.getElementById('adminAuthForm').dataset.userid = userId;
-  document.getElementById('adminPassword').value = '';
-  document.getElementById('adminAuthError').style.display = 'none';
-  modal.classList.add('active');
+  navigateToState(APP_STATES.PASSWORD_SCREEN, { userId });
 };
 
 window.openAdminAuth = function() {
-  const modal = document.getElementById('adminAuthModal');
-  modal.querySelector('h2').textContent = 'Admin Access';
-  document.getElementById('adminAuthForm').dataset.userid = 'admin';
-  document.getElementById('adminPassword').value = '';
-  document.getElementById('adminAuthError').style.display = 'none';
-  modal.classList.add('active');
+  navigateToState(APP_STATES.PASSWORD_SCREEN, { userId: 'admin' });
 };
 
 function finalizeLogin(userId, role = 'admin') {

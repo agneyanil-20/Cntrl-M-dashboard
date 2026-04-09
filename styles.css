@@ -837,7 +837,7 @@ body {
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(5px);
-  z-index: 1000;
+  z-index: 10001;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1021,6 +1021,7 @@ body {
   align-items: center; justify-content: center;
   overflow: hidden;
   transition: opacity 0.5s ease;
+  pointer-events: auto; /* Ensure overlay captures events */
 }
 
 .blob-container {
@@ -1091,9 +1092,11 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 15px;
-  cursor: pointer;
+  cursor: pointer !important;
   transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
   overflow: hidden;
+  pointer-events: auto;
+  user-select: none;
 }
 
 .role-card::before {
@@ -1113,6 +1116,12 @@ body {
   box-shadow: 
     0 20px 40px rgba(0,0,0,0.4),
     0 0 0 1px rgba(230, 255, 0, 0.1);
+}
+
+.role-card:active {
+  transform: translateY(-4px) scale(0.97);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .role-card:hover::before {
