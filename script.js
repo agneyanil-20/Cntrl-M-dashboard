@@ -236,8 +236,7 @@ window.navigateToState = function(state, data = {}) {
   // Helper to reset screens to baseline
   const resetScreens = () => {
     [roleScreen, nameScreen].forEach(s => {
-      if (s) s.style.display = 'none';
-      if (s) s.style.opacity = '0';
+      if (s) s.classList.remove('active');
     });
     if (passModal) passModal.classList.remove('active');
   };
@@ -245,20 +244,16 @@ window.navigateToState = function(state, data = {}) {
   switch(state) {
     case APP_STATES.ROLE_SELECTION:
       resetScreens();
-      roleScreen.style.display = 'flex';
-      setTimeout(() => roleScreen.style.opacity = '1', 10);
+      roleScreen.classList.add('active');
       break;
 
     case APP_STATES.NAME_SELECTION:
       // data.role expected
       console.log("Populating names for:", data.role);
       _populateNameGrid(data.role);
-      roleScreen.style.opacity = '0';
-      setTimeout(() => {
-        roleScreen.style.display = 'none';
-        nameScreen.style.display = 'flex';
-        setTimeout(() => nameScreen.style.opacity = '1', 10);
-      }, 300);
+      
+      roleScreen.classList.remove('active');
+      nameScreen.classList.add('active');
       break;
 
     case APP_STATES.PASSWORD_SCREEN:

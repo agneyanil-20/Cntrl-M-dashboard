@@ -1021,7 +1021,15 @@ body {
   align-items: center; justify-content: center;
   overflow: hidden;
   transition: opacity 0.5s ease;
-  pointer-events: auto; /* Ensure overlay captures events */
+  pointer-events: none; /* Block clicks by default so screens don't overlap */
+  opacity: 0;
+  display: none;
+}
+
+.entry-overlay.active {
+  pointer-events: auto;
+  opacity: 1;
+  display: flex;
 }
 
 .blob-container {
